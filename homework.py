@@ -49,17 +49,12 @@ def check_tokens():
     variables_missing = [
         variable for variable in variables_to_check if not globals()[variable]
     ]
-    if len(variables_missing) > 0:
+    if variables_missing:
         logger.critical(
             'Отустствуют обязательные переменные окружения:'
             f'{", ".join(variables_missing)}'
         )
         exit(1)
-    try:
-        logger.debug('Проверка check_tokens успешно пройдена.')
-    except telegram.TelegramError as error:
-        logger.error(f'Сообщение не отправлено: {error}', exc_info=True)
-        raise error
 
 
 def send_message(bot, message):
@@ -69,7 +64,6 @@ def send_message(bot, message):
         bot.send_message(TELEGRAM_CHAT_ID, message)
     except telegram.TelegramError as error:
         logger.error(f'Сообщение не отправлено: {error}', exc_info=True)
-        raise error
 
 
 def get_api_answer(timestamp):
@@ -89,9 +83,7 @@ def get_api_answer(timestamp):
             f'Получен статус: {response.status_code}'
             f' вместо ожидаемого {HTTPStatus.OK}.'
         )
-    logger.debug(
-        f'Ответ на запрос от API успешно получен. {response.json()}'
-    )
+    logger.debug('Ответ на запрос от API успешно получен.')
     return response.json()
 
 
@@ -100,18 +92,18 @@ def check_response(response):
     Документация из урока API сервиса Практикум.Домашка.
     """
     logger.debug('Начало проверки ответа от API сервера (check_response).')
-    current_date = 'current_date'  # Дата ответа API.
     if not isinstance(response, dict):
         raise TypeError(f'Тип данных ответа ({type(response)})'
                         ' не соответствует ожидаемому (list).')
-    if current_date not in response:
-        raise KeyError(f'Ответ API не содержит ключ {current_date}.')
-    homeworks = 'homeworks'  # Все домашние работы ученика в виде списка.
-    if not isinstance(response.get(homeworks), list):
-        raise TypeError(f'Тип данных ответа ({type(response.get(homeworks))})'
-                        ' не соответствует ожидаемому (list).')
-    if homeworks not in response:
-        raise KeyError(f'Ответ API не содержит ключ {homeworks}.')
+    if 'current_date' not in response:
+        raise KeyError('Ответ API не содержит ключ current_date.')
+    if 'homeworks' not in response:
+        raise KeyError('Ответ API не содержит ключ homeworks.')
+    if not isinstance(response.get('homeworks'), list):
+        raise TypeError('Тип данных ответа'
+                        f' ({type(response.get("homeworks"))})'
+                        'не соответствует ожидаемому (list).'
+                        )
     logger.debug(
         'Успешное окончание проверки ответа от API сервера'
         ' (функция check_response).'
@@ -127,7 +119,7 @@ def parse_status(homework):
     status = homework.get('status')
     if 'status' not in homework:
         raise KeyError(f'В словаре {homework} отсутствует ключ status.')
-    if status not in list(HOMEWORK_VERDICTS.keys()):
+    if status not in HOMEWORK_VERDICTS:
         raise KeyError(
             f'Статус домашней работы ({status}) отличается от возможных'
             f' ожидаемых статусов: {HOMEWORK_VERDICTS.values}.'
@@ -150,18 +142,18 @@ def main():
     while True:
         try:
             homework = check_response(get_api_answer(timestamp))
-            timestamp = int(time.time())
-            if len(homework) == 0:
+            if not homework:
                 logger.debug('В ответе остутствуют новые статусы домашки')
             else:
-                last_sent_message = send_message(
-                    bot, parse_status(homework[0])
-                )
+                send_message(bot, parse_status(homework[0]))
+                last_sent_message = parse_status(homework[0])
+            timestamp = int(time.time())
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             logger.error(message, exc_info=True)
             if message != last_sent_message:
-                last_sent_message = send_message(bot, message)
+                send_message(bot, message)
+                last_sent_message = message
         finally:
             time.sleep(RETRY_PERIOD)
 
