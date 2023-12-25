@@ -4,9 +4,9 @@ import os
 import sys
 import time
 
-from dotenv import load_dotenv
 import requests
 import telegram
+from dotenv import load_dotenv
 
 from exceptions import HTTPStatusNotOkError
 
@@ -54,7 +54,7 @@ def check_tokens():
             'Отустствуют обязательные переменные окружения:'
             f'{", ".join(variables_missing)}'
         )
-        exit(1)
+        sys.exit(1)
 
 
 def send_message(bot, message):
