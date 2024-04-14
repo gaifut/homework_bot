@@ -17,8 +17,22 @@ TELEGRAM_TOKEN=dsfsfsdf2342:3423sdsdf32sdf
 TELEGRAM_CHAT_ID=23423sdfsf
 ```
 
-1. Fork'ните этот репозиторий.
-2. Клонируйте форкнутый репозиторий.
-3. Создать и активировать виртуальное окружение.
-4. Установить зависимости из requirements.txt
-5. Запустить проект ``` python homework.py```
+1. Склонируйте репозиторий ```git clone git@github.com:gaifut/homework_bot.git```
+2. Установите виртуальное окружение и зависимости.
+```
+# Для Linux/MacOS
+python3 -m venv venv
+
+# Для Windows
+python -m venv venv
+
+# Активируйте виртуальное окружение:
+source venv/bin/activate
+
+# Обновите pip
+python -m pip install --upgrade pip 
+
+# Установите зависимости
+pip install -r requirements.txt
+```
+3. Запустите проект. В папке с проектом в терминале наберите: ```python homework.py```
